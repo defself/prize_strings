@@ -3,6 +3,6 @@ defmodule PrizeStringsTest do
   doctest PrizeStrings
 
   test "greets the world" do
-    assert PrizeStrings.hello() == :world
+    assert PrizeStrings.calculate(4) == 43
   end
 end
