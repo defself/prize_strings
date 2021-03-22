@@ -24,53 +24,47 @@ defmodule PrizeStrings do
   3
   iex> PrizeStrings.calculate(2)
   8
+  iex> PrizeStrings.calculate(3)
+  19
   iex> PrizeStrings.calculate(4)
   43
   # iex> PrizeStrings.calculate(30)
-  # "¯\_(ツ)_/¯"
+  # ~S[¯\_(ツ)_/¯]
   """
   def calculate(days) do
-    PrizeStrings.students(days)
-    |> Enum.reduce(0, fn (comb, acc) ->
-      if PrizeStrings.is_decent(comb) do
-        acc + 1
-      else
-        acc
-      end
-    end)
+    students(days)
+    |> Enum.count
   end
 
   @doc """
-  iex> PrizeStrings.is_decent("LOOL")
+  iex> PrizeStrings.decent?(~w[L O O L])
   false
-  iex> PrizeStrings.is_decent("OOOO")
-  true
-  iex> PrizeStrings.is_decent("LOOO")
-  true
-  iex> PrizeStrings.is_decent("AAAO")
+  iex> PrizeStrings.decent?(~w[A A A O])
   false
+  iex> PrizeStrings.decent?(~w[A A L A])
+  true
+  iex> PrizeStrings.decent?(~w[L O O O])
+  true
   """
-  def is_decent(student) do
+  def decent?(student) do
     cond do
-      ~r/L/   |> Regex.scan(student) |> Enum.count() > 1 -> false
-      ~r/AAA/ |> Regex.scan(student) |> Enum.count() > 0 -> false
+      student |> Enum.count(&(&1 == "L")) > 1 -> false
+      student |> Enum.join |> String.contains?("AAA") -> false
       true -> true
     end
   end
 
-  @doc """
-  iex> PrizeStrings.students(1)
-  ["L", "O", "A"]
-  iex> PrizeStrings.students(2)
-  ["LL", "LO", "LA", "OL", "OO", "OA", "AL", "AO", "AA"]
-  iex> PrizeStrings.students(4) |> Enum.count
-  81
-  # iex> PrizeStrings.students(30) |> Enum.count
-  # "¯\_(ツ)_/¯"
-  """
-  def students(days) do
-    @grades
-    |> Permutations.shuffle(days)
-    |> Enum.map(&Enum.join(&1))
+  defp students(0), do: [[]]
+
+  defp students(days) do
+    for head <- @grades,
+        tail when tail != [false] <- students(days - 1) do
+      if (combo = [head | tail]) |> decent? do
+        combo
+      else
+        [false]
+      end
+    end
+    |> Enum.filter(&(&1 != [false]))
   end
 end
